@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>QA Report — Queen of the Castle · Direct Route Design</title>
+<style>
+
+/* ─────────────────────────────────────────────────────
+   TOKENS
+───────────────────────────────────────────────────── */
+:root {
+  --black:   #0d1117;
+  --ink:     #1e293b;
+  --ink-2:   #334155;
+  --ink-3:   #64748b;
+  --ink-4:   #94a3b8;
+  --line:    #e2e8f0;
+  --line-lt: #f1f5f9;
+  --bg:      #ffffff;
+  --bg-off:  #f8fafc;
+
+  --crit:    #dc2626;
+  --high:    #ea580c;
+  --med:     #2563eb;
+  --low:     #16a34a;
+
+  --crit-bg: #fef2f2;
+  --high-bg: #fff7ed;
+  --med-bg:  #eff6ff;
+  --low-bg:  #f0fdf4;
+
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
+  --mono: "SF Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
+}
+
+/* ─────────────────────────────────────────────────────
+   RESET & BASE
+───────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: .85em;
+  color: var(--ink-2);
+  background: var(--line-lt);
+  padding: .1em .35em;
+  border-radius: 3px;
+}
+
+/* ─────────────────────────────────────────────────────
+   AGENCY BAR
+───────────────────────────────────────────────────── */
+.agency-bar {
+  background: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 48px;
+}
+.agency-bar a { display: flex; align-items: center; text-decoration: none; }
+.agency-bar-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+}
+
+/* ─────────────────────────────────────────────────────
+   PAGE WRAPPER
+───────────────────────────────────────────────────── */
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 48px 100px;
+}
+
+/* ─────────────────────────────────────────────────────
+   DOCUMENT HEADER
+───────────────────────────────────────────────────── */
+.doc-header {
+  padding: 64px 0 52px;
+  border-bottom: 1px solid var(--line);
+}
+
+.doc-header-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  margin-bottom: 16px;
+}
+
+.doc-header-title {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -.025em;
+  line-height: 1.15;
+  color: var(--black);
+  margin-bottom: 12px;
+}
+
+.doc-header-meta {
+  font-size: 14px;
+  color: var(--ink-3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.doc-header-meta .sep {
+  color: var(--line);
+  font-weight: 300;
+}
+
+/* ─────────────────────────────────────────────────────
+   SEVERITY OVERVIEW
+───────────────────────────────────────────────────── */
+.overview {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin: 40px 0 72px;
+}
+
+.ov-cell {
+  padding: 24px 0 20px;
+  border-right: 1px solid var(--line);
+}
+.ov-cell:last-child { border-right: none; }
+.ov-cell:not(:first-child) { padding-left: 28px; }
+
+.ov-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.ov-label.crit { color: var(--crit); }
+.ov-label.high { color: var(--high); }
+.ov-label.med  { color: var(--med);  }
+.ov-label.low  { color: var(--low);  }
+
+.ov-num {
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: -.04em;
+  line-height: 1;
+  color: var(--black);
+}
+
+.ov-sub {
+  font-size: 12px;
+  color: var(--ink-4);
+  margin-top: 4px;
+}
+
+/* ─────────────────────────────────────────────────────
+   SECTION
+───────────────────────────────────────────────────── */
+.section {
+  margin-bottom: 80px;
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0;
+}
+
+.section-header-left { display: flex; align-items: baseline; gap: 14px; }
+
+.section-num {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--black);
+  line-height: 1.2;
+}
+
+.section-count {
+  font-size: 12px;
+  color: var(--ink-4);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────────────────────────────
+   SCREENSHOT STRIP
+───────────────────────────────────────────────────── */
+.ss-strip {
+  display: flex;
+  gap: 8px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line-lt);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.ss-strip figure {
+  flex-shrink: 0;
+  cursor: zoom-in;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--bg-off);
+  transition: border-color .15s, box-shadow .15s;
+}
+.ss-strip figure:hover {
+  border-color: var(--ink-4);
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+}
+.ss-strip img {
+  display: block;
+  height: 120px;
+  width: auto;
+  max-width: 260px;
+  object-fit: cover;
+  object-position: top;
+}
+.ss-strip figcaption {
+  font-size: 10px;
+  color: var(--ink-4);
+  padding: 5px 10px;
+  border-top: 1px solid var(--line-lt);
+  background: var(--bg-off);
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─────────────────────────────────────────────────────
+   ISSUE ITEM
+───────────────────────────────────────────────────── */
+.issue {
+  padding: 28px 0 28px 20px;
+  border-bottom: 1px solid var(--line-lt);
+  border-left: 2px solid transparent;
+  position: relative;
+}
+.issue.crit { border-left-color: var(--crit); }
+.issue.high { border-left-color: var(--high); }
+.issue.med  { border-left-color: var(--med);  }
+.issue.low  { border-left-color: var(--low);  }
+
+.issue-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.issue-id {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .03em;
+}
+
+.sev {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+.sev.crit { color: var(--crit); }
+.sev.high { color: var(--high); }
+.sev.med  { color: var(--med);  }
+.sev.low  { color: var(--low);  }
+
+.issue-title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  line-height: 1.4;
+  color: var(--black);
+  margin-bottom: 10px;
+}
+
+.issue-desc {
+  font-size: 14.5px;
+  color: var(--ink-2);
+  line-height: 1.7;
+  margin-bottom: 12px;
+  max-width: 72ch;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+
+.tag {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--ink-3);
+  background: var(--line-lt);
+  border-radius: 4px;
+  padding: 2px 8px;
+  letter-spacing: .02em;
+}
+.tag.warn { background: #fff7ed; color: #9a3412; }
+.tag.info { background: #eff6ff; color: #1d4ed8; }
+
+.rec {
+  font-size: 14px;
+  color: var(--ink-2);
+  line-height: 1.7;
+  border-left: 2px solid var(--line);
+  padding: 2px 0 2px 16px;
+  max-width: 70ch;
+}
+.rec-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  margin-bottom: 5px;
+}
+
+/* ─────────────────────────────────────────────────────
+   STATUS TABLE  (spam/bot matrix)
+───────────────────────────────────────────────────── */
+.status-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  margin: 16px 0;
+}
+.status-table th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.status-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line-lt);
+  color: var(--ink-2);
+  vertical-align: middle;
+}
+.status-table tr:last-child td { border-bottom: none; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.pill-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.pill-done    { color: var(--low);  } .pill-done    .pill-dot { background: var(--low);  }
+.pill-missing { color: var(--crit); } .pill-missing .pill-dot { background: var(--crit); }
+
+/* ─────────────────────────────────────────────────────
+   DOCUMENT FOOTER
+───────────────────────────────────────────────────── */
+.doc-footer {
+  border-top: 1px solid var(--line);
+  padding-top: 32px;
+}
+
+.doc-footer-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+.doc-footer-meta p {
+  font-size: 12px;
+  color: var(--ink-4);
+}
+
+.doc-footer-agency {
+  background: #0a0a0a;
+  border-radius: 8px;
+  padding: 20px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.doc-footer-agency-right {
+  font-size: 12px;
+  color: rgba(255,255,255,.35);
+  text-align: right;
+  line-height: 1.8;
+}
+.doc-footer-agency-right a {
+  color: rgba(255,255,255,.55);
+  text-decoration: none;
+  transition: color .12s;
+}
+.doc-footer-agency-right a:hover { color: #fff; }
+
+/* ─────────────────────────────────────────────────────
+   LIGHTBOX
+───────────────────────────────────────────────────── */
+#lb-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(9, 9, 11, .92);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  padding: 32px;
+  backdrop-filter: blur(4px);
+}
+#lb-overlay.open { display: flex; }
+
+#lb-img-wrap {
+  position: relative;
+  max-width: calc(100vw - 64px);
+  max-height: calc(100vh - 64px);
+  cursor: default;
+  animation: lb-in .18s cubic-bezier(.25,.46,.45,.94);
+}
+@keyframes lb-in {
+  from { opacity: 0; transform: scale(.97) translateY(4px); }
+  to   { opacity: 1; transform: scale(1)  translateY(0);    }
+}
+
+#lb-img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 100px);
+  border-radius: 6px;
+  box-shadow: 0 32px 100px rgba(0,0,0,.7);
+  user-select: none;
+}
+
+#lb-caption {
+  margin-top: 12px;
+  font-size: 12px;
+  color: rgba(255,255,255,.4);
+  text-align: center;
+  font-family: var(--font);
+  letter-spacing: .02em;
+}
+
+#lb-close {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.1);
+  color: rgba(255,255,255,.7);
+  font-size: 16px;
+  line-height: 1;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .12s, color .12s;
+}
+#lb-close:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+</style>
+</head>
+<body>
+
+<!-- ══ LIGHTBOX ══════════════════════════════════════════════ -->
+<div id="lb-overlay" role="dialog" aria-modal="true" aria-label="Image viewer">
+  <div id="lb-img-wrap">
+    <img id="lb-img" src="" alt=""/>
+    <div id="lb-caption"></div>
+  </div>
+  <button id="lb-close" aria-label="Close">&#x2715;</button>
+</div>
+
+<!-- ══ AGENCY BAR ════════════════════════════════════════════ -->
+<div class="agency-bar">
+  <a href="https://directroutedesign.com" target="_blank" rel="noopener" aria-label="Direct Route Design">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 38" height="26" aria-hidden="true">
+      <rect x="0" y="1" width="36" height="36" rx="4" fill="#111"/>
+      <rect x="6" y="7" width="10" height="24" rx="2" fill="#F15A22"/>
+      <polygon points="16,7 30,19 16,31" fill="#F15A22"/>
+      <rect x="9" y="11" width="5" height="16" rx="1" fill="#111"/>
+      <polygon points="14,11 21.5,19 14,27" fill="#111"/>
+      <text x="44" y="20" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif" font-size="15" font-weight="700" fill="#fff" dominant-baseline="middle">Direct Route.</text>
+      <text x="44" y="30" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif" font-size="7.5" font-weight="500" fill="rgba(255,255,255,0.45)" letter-spacing="1.5">MARKETING &amp; DESIGN</text>
+    </svg>
+  </a>
+  <span class="agency-bar-label">Confidential QA Report</span>
+</div>
+
+<!-- ══ PAGE ══════════════════════════════════════════════════ -->
+<div class="page">
+
+<!-- ── DOCUMENT HEADER ──────────────────────────────────── -->
+<header class="doc-header">
+  <p class="doc-header-eyebrow">Website Quality Assurance</p>
+  <h1 class="doc-header-title">Queen of the Castle</h1>
+  <div class="doc-header-meta">
+    <span>queenofthecastle.ca</span>
+    <span class="sep">·</span>
+    <span>Desktop &amp; Mobile</span>
+    <span class="sep">·</span>
+    <span>May 19, 2026</span>
+    <span class="sep">·</span>
+    <span>28 issues across 9 sections</span>
+  </div>
+</header>
+
+<!-- ── SEVERITY OVERVIEW ─────────────────────────────────── -->
+<div class="overview">
+  <div class="ov-cell">
+    <div class="ov-label crit">Critical</div>
+    <div class="ov-num">8</div>
+    <div class="ov-sub">Broken functionality</div>
+  </div>
+  <div class="ov-cell">
+    <div class="ov-label high">High</div>
+    <div class="ov-num">10</div>
+    <div class="ov-sub">Major UX gaps</div>
+  </div>
+  <div class="ov-cell">
+    <div class="ov-label med">Medium</div>
+    <div class="ov-num">7</div>
+    <div class="ov-sub">Layout &amp; clarity</div>
+  </div>
+  <div class="ov-cell">
+    <div class="ov-label low">Low</div>
+    <div class="ov-num">3</div>
+    <div class="ov-sub">Polish items</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+  1 · HERO & HOMEPAGE
+══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-header-left">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Hero &amp; Homepage</h2>
+    </div>
+    <span class="section-count">4 issues</span>
+  </div>
+
+  <div class="ss-strip">
+    <figure data-src="Screenshot 2026-05-19 at 10.59.12 PM.png" data-caption="Homepage hero &amp; Quick Links panel (desktop) — annotated">
+      <img src="Screenshot 2026-05-19 at 10.59.12 PM.png" alt="Homepage hero and Quick Links"/>
+      <figcaption>Homepage hero &amp; Quick Links — annotated</figcaption>
+    </figure>
+    <figure data-src="Screenshot 2026-05-19 at 11.06.49 PM.png" data-caption="Style Roundup — episode list with small Watch CTAs">
+      <img src="Screenshot 2026-05-19 at 11.06.49 PM.png" alt="Style Roundup episode list"/>
+      <figcaption>Style Roundup — small Watch CTAs</figcaption>
+    </figure>
+  </div>
+
+  <div class="issue crit">
+    <div class="issue-meta"><span class="issue-id">#01</span><span class="sev crit">Critical</span></div>
+    <h3 class="issue-title">Season 2 Trailer modal opens but video does not play</h3>
+    <p class="issue-desc">"Watch Season 2 Trailer" opens a modal but the video fails to load or play. The modal renders empty.</p>
+    <div class="tags"><span class="tag">Hero</span><span class="tag">Video / Modal</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Verify the video embed URL is correctly wired to the modal. Confirm hosting permissions and that the iframe <code>allow</code> attributes include autoplay.</div>
+  </div>
+
+  <div class="issue high">
+    <div class="issue-meta"><span class="issue-id">#02</span><span class="sev high">High</span></div>
+    <h3 class="issue-title">Main nav items bunch together on mid-size desktop viewports (~1100–1280 px)</h3>
+    <p class="issue-desc">Navigation items crowd and visually clip at intermediate widths before the mobile breakpoint triggers.</p>
+    <div class="tags"><span class="tag">Navigation</span><span class="tag warn">Responsive</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Add an intermediate breakpoint that collapses secondary items or switches to the hamburger menu before the current mobile threshold.</div>
+  </div>
+
+  <div class="issue high">
+    <div class="issue-meta"><span class="issue-id">#03</span><span class="sev high">High</span></div>
+    <h3 class="issue-title">"Vote / Interact" and "More To Do" both resolve to the same page; hashtag renders as ##</h3>
+    <p class="issue-desc">Both Quick Links entries navigate to the same destination. The hashtag label also double-renders as <code>##QUEENOFTHECASTLE</code>.</p>
+    <div class="tags"><span class="tag">Navigation</span><span class="tag">Quick Links</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Differentiate routes or remove the duplicate. Fix the double-hash — likely a template variable being escaped twice.</div>
+  </div>
+
+  <div class="issue med">
+    <div class="issue-meta"><span class="issue-id">#04</span><span class="sev med">Medium</span></div>
+    <h3 class="issue-title">Episode "Watch" CTAs are small text — streaming intent is not apparent</h3>
+    <p class="issue-desc">On the Style Roundup list "Watch the Episode" appears as a small text link. Users may not realise they can stream directly from the site.</p>
+    <div class="tags"><span class="tag">Episodes</span><span class="tag">CTA</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Replace with a pill button or icon-play button consistent with the hero CTAs. Hit target should be at least 44 × 44 px.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+  2 · EPISODES PAGE
+══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-header-left">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Episodes Page</h2>
+    </div>
+    <span class="section-count">4 issues</span>
+  </div>
+
+  <div class="ss-strip">
+    <figure data-src="Screenshot 2026-05-19 at 10.32.51 PM.png" data-caption="Episode grid — inline expansion breaks layout">
+      <img src="Screenshot 2026-05-19 at 10.32.51 PM.png" alt="Episode grid expansion"/>
+      <figcaption>Episode grid — expansion breaks layout</figcaption>
+    </figure>
+    <figure data-src="Screenshot 2026-05-19 at 10.31.21 PM.png" data-caption="Expanded episode panel — X looks like a close button, not a share target">
+      <img src="Screenshot 2026-05-19 at 10.31.21 PM.png" alt="Social share X ambiguity"/>
+      <figcaption>Expanded panel — X share button ambiguity</figcaption>
+    </figure>
+    <figure data-src="Screenshot 2026-05-19 at 10.16.26 PM.png" data-caption="Episodes page — broken image on The Wedding Business card (hard-coded, not CMS-linked)">
+      <img src="Screenshot 2026-05-19 at 10.16.26 PM.png" alt="Broken Wedding Business card"/>
+      <figcaption>Episodes — broken Wedding Business card</figcaption>
+    </figure>
+  </div>
+
+  <div class="issue crit">
+    <div class="issue-meta"><span class="issue-id">#05</span><span class="sev crit">Critical</span></div>
+    <h3 class="issue-title">Broken image on "The Wedding Business" episode card</h3>
+    <p class="issue-desc">The card renders with a blank white image area. Content appears hard-coded rather than CMS-driven, so missing assets fail silently with no fallback.</p>
+    <div class="tags"><span class="tag">Episodes</span><span class="tag info">CMS</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Pull all episode cards from the CMS dynamically. Add a fallback placeholder image for any card where an asset has not yet been uploaded.</div>
+  </div>
+
+  <div class="issue high">
+    <div class="issue-meta"><span class="issue-id">#06</span><span class="sev high">High</span></div>
+    <h3 class="issue-title">Expanding an episode card breaks the surrounding grid layout</h3>
+    <p class="issue-desc">Clicking a card expands an inline panel that pushes content below it out of position, making the page feel unstable.</p>
+    <div class="tags"><span class="tag">Episodes</span><span class="tag">Layout</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Use a full-width row-panel (Netflix-style) or a modal overlay so the grid itself is not disturbed.</div>
+  </div>
+
+  <div class="issue med">
+    <div class="issue-meta"><span class="issue-id">#07</span><span class="sev med">Medium</span></div>
+    <h3 class="issue-title">Social share "X" button is visually identical to a close/dismiss control</h3>
+    <p class="issue-desc">In the expanded episode panel the circular "X" share button is indistinguishable from a close affordance. No platform icons provide context.</p>
+    <div class="tags"><span class="tag">Episodes</span><span class="tag">Social Sharing</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Replace with the X/Twitter logo icon. Add icons for all share targets and label the group "Share:" to prevent confusion.</div>
+  </div>
+
+  <div class="issue low">
+    <div class="issue-meta"><span class="issue-id">#08</span><span class="sev low">Low</span></div>
+    <h3 class="issue-title">Authoring placeholder slot visible in Transformation Moments section</h3>
+    <p class="issue-desc">A "[PLACEHOLDER SLOT] ADD THE NEXT APPROVED BEFORE/AFTER HERE" card is visible to end users in the public grid.</p>
+    <div class="tags"><span class="tag">Transformation Moments</span><span class="tag info">CMS</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Render placeholder slots only in authenticated CMS preview mode. Production should render nothing for unpublished slots.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+  3 · ROYAL WARDROBE & LOOK MODAL
+══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-header-left">
+      <span class="section-num">03</span>
+      <h2 class="section-title">Royal Wardrobe &amp; Look Modal</h2>
+    </div>
+    <span class="section-count">4 issues</span>
+  </div>
+
+  <div class="ss-strip">
+    <figure data-src="Screenshot 2026-05-19 at 10.41.22 PM.png" data-caption="Look modal — 'Crown This Look', Watch Episode &amp; Share button issues annotated">
+      <img src="Screenshot 2026-05-19 at 10.41.22 PM.png" alt="Royal Wardrobe look modal issues"/>
+      <figcaption>Look modal — Crown This Look, Watch &amp; Share issues</figcaption>
+    </figure>
+  </div>
+
+  <div class="issue crit">
+    <div class="issue-meta"><span class="issue-id">#09</span><span class="sev crit">Critical</span></div>
+    <h3 class="issue-title">"Watch Episode" in the look modal opens a broken modal with no video; play icon is offset</h3>
+    <p class="issue-desc">Clicking "Watch Episode 01" triggers a second modal that loads no video. The play icon is also visually misaligned from its container.</p>
+    <div class="tags"><span class="tag">Royal Wardrobe</span><span class="tag">Video / Modal</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Fix the video embed (same root cause as #01). Correct the play icon — check for absolute positioning or flex centering misalignment.</div>
+  </div>
+
+  <div class="issue crit">
+    <div class="issue-meta"><span class="issue-id">#10</span><span class="sev crit">Critical</span></div>
+    <h3 class="issue-title">"Share" button in the look modal is non-functional</h3>
+    <p class="issue-desc">The Share button triggers no action — no native share sheet, clipboard copy, or navigation occurs.</p>
+    <div class="tags"><span class="tag">Royal Wardrobe</span><span class="tag">Social Sharing</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Implement via the Web Share API with a clipboard-copy fallback, or open a pre-populated social sharing URL in a new tab.</div>
+  </div>
+
+  <div class="issue high">
+    <div class="issue-meta"><span class="issue-id">#11</span><span class="sev high">High</span></div>
+    <h3 class="issue-title">"Crown This Look" purpose is unclear — voting results are hidden inside episode view</h3>
+    <p class="issue-desc">Nothing explains the action before a user taps. Results only surface inside individual episode views, making the feature feel unrewarding.</p>
+    <div class="tags"><span class="tag">Royal Wardrobe</span><span class="tag">Voting</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Add a subtitle explaining what crowning does. Show a live count or confirmation immediately after voting.</div>
+  </div>
+
+  <div class="issue med">
+    <div class="issue-meta"><span class="issue-id">#12</span><span class="sev med">Medium</span></div>
+    <h3 class="issue-title">Verdict options ("Iconic", "Love It", "Not For Me") lack context about where results appear</h3>
+    <p class="issue-desc">The three verdict options appear without indicating what effect a vote has or where results will surface.</p>
+    <div class="tags"><span class="tag">Royal Wardrobe</span><span class="tag">Voting</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Add a heading contextualising the vote. Display a post-vote state with a thank-you and the current running tally.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+  4 · FUN ZONE & VOTING
+══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-header-left">
+      <span class="section-num">04</span>
+      <h2 class="section-title">Fun Zone &amp; Voting</h2>
+    </div>
+    <span class="section-count">1 issue</span>
+  </div>
+
+  <div class="ss-strip">
+    <figure data-src="Screenshot 2026-05-19 at 10.53.30 PM.png" data-caption="Fun Zone — polls &amp; 'Pick Your Favourite Castle Moment' episode voting grid">
+      <img src="Screenshot 2026-05-19 at 10.53.30 PM.png" alt="Fun Zone polls and voting cards"/>
+      <figcaption>Fun Zone — polls &amp; episode voting cards</figcaption>
+    </figure>
+  </div>
+
+  <div class="issue high">
+    <div class="issue-meta"><span class="issue-id">#13</span><span class="sev high">High</span></div>
+    <h3 class="issue-title">Episode cards in "Pick Your Favourite Moment" navigate to an unrelated destination</h3>
+    <p class="issue-desc">Clicking an episode card does not take the user to that episode's voting section — they land somewhere irrelevant.</p>
+    <div class="tags"><span class="tag">Fun Zone</span><span class="tag">Voting</span><span class="tag">Navigation</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Each card's href/onClick should route to the specific episode's voting section or open an episode-level voting modal. Audit all handlers on this component.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+  5 · CONTESTS
+══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-header-left">
+      <span class="section-num">05</span>
+      <h2 class="section-title">Contests</h2>
+    </div>
+    <span class="section-count">1 issue</span>
+  </div>
+
+  <div class="ss-strip">
+    <figure data-src="Screenshot 2026-05-19 at 10.55.13 PM.png" data-caption="Contests page — uneven coloured header heights across the 4 cards; buttons misaligned">
+      <img src="Screenshot 2026-05-19 at 10.55.13 PM.png" alt="Contests uneven card headers"/>
+      <figcaption>Contests — uneven header heights</figcaption>
+    </figure>
+  </div>
+
+  <div class="issue med">
+    <div class="issue-meta"><span class="issue-id">#14</span><span class="sev med">Medium</span></div>
+    <h3 class="issue-title">Contest card headers are different heights — CTA buttons not vertically aligned across the row</h3>
+    <p class="issue-desc">The coloured header area of each card varies with title length, causing action buttons to appear at inconsistent vertical positions.</p>
+    <div class="tags"><span class="tag">Contests</span><span class="tag">Layout</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Use <code>justify-content: space-between</code> and a minimum header height on each card so buttons are always pushed to the card bottom.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+  6 · TRANSFORMATION MOMENTS
+══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-header-left">
+      <span class="section-num">06</span>
+      <h2 class="section-title">Transformation Moments</h2>
+    </div>
+    <span class="section-count">3 issues</span>
+  </div>
+
+  <div class="ss-strip">
+    <figure data-src="Screenshot 2026-05-19 at 10.57.09 PM.png" data-caption="Transformation grid — card is only clickable via tiny text; narrow 'More Transformations' banner">
+      <img src="Screenshot 2026-05-19 at 10.57.09 PM.png" alt="Transformation card clickability and narrow banner"/>
+      <figcaption>Transformation grid — click target &amp; banner</figcaption>
+    </figure>
+    <figure data-src="Screenshot 2026-05-19 at 10.28.44 PM.png" data-caption="'More Transformations Coming' banner — too narrow, flush-left instead of full-width">
+      <img src="Screenshot 2026-05-19 at 10.28.44 PM.png" alt="More Transformations Coming banner too narrow"/>
+      <figcaption>"More Transformations" — banner too narrow</figcaption>
+    </figure>
+   
+  </div>
+
+  <div class="issue med">
+    <div class="issue-meta"><span class="issue-id">#15</span><span class="sev med">Medium</span></div>
+    <h3 class="issue-title">Transformation cards only clickable via a small text link — images are not interactive</h3>
+    <p class="issue-desc">Only the "See the Transformation" text is a click target. The large before/after image block does nothing.</p>
+    <div class="tags"><span class="tag">Transformation Moments</span><span class="tag warn">Accessibility</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Wrap each card in an anchor or apply the click handler to the full card. Add <code>cursor: pointer</code> and a hover state on the image.</div>
+  </div>
+
+  <div class="issue high">
+    <div class="issue-meta"><span class="issue-id">#16</span><span class="sev high">High</span></div>
+    <h3 class="issue-title">All "See the Transformation" links resolve to the same generic destination</h3>
+    <p class="issue-desc">Regardless of which card is clicked, all three links navigate to the same area rather than the specific room or episode transformation.</p>
+    <div class="tags"><span class="tag">Transformation Moments</span><span class="tag">Navigation</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Pass a room/episode slug in the route so each link targets the correct detail. Verify all card hrefs are distinct.</div>
+  </div>
+
+  <div class="issue low">
+    <div class="issue-meta"><span class="issue-id">#17</span><span class="sev low">Low</span></div>
+    <h3 class="issue-title">"More Transformations Coming" banner is too narrow — sits in one column instead of full width</h3>
+    <p class="issue-desc">The banner is flush-left in a single column rather than spanning the grid row, making it look like an incomplete card.</p>
+    <div class="tags"><span class="tag">Transformation Moments</span><span class="tag">Layout</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Set <code>grid-column: 1 / -1</code> on the banner. Centre the text content within it.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+  7 · ROYAL DECREE FORM
+══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-header-left">
+      <span class="section-num">07</span>
+      <h2 class="section-title">Royal Decree Form</h2>
+    </div>
+    <span class="section-count">2 issues</span>
+  </div>
+
+  <div class="ss-strip">
+    <figure data-src="Screenshot 2026-05-19 at 10.25.01 PM.png" data-caption="Royal Decree form — placeholder contrast fails WCAG AA; URL and email fields are different widths">
+      <img src="Screenshot 2026-05-19 at 10.25.01 PM.png" alt="Royal Decree form contrast and field width issues"/>
+      <figcaption>Royal Decree form — contrast &amp; field widths</figcaption>
+    </figure>
+  </div>
+
+  <div class="issue crit">
+    <div class="issue-meta"><span class="issue-id">#18</span><span class="sev crit">Critical</span></div>
+    <h3 class="issue-title">Form field placeholders and hashtag label fail WCAG AA contrast requirements</h3>
+    <p class="issue-desc">All three elements (URL input, email input, #ROYALDECREE label) use light text on an orange-to-red gradient. None meet the 4.5:1 contrast ratio required for WCAG AA.</p>
+    <div class="tags"><span class="tag warn">Accessibility · WCAG AA</span><span class="tag">Royal Decree</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Use white or near-white (#f5f5f5) for all labels and placeholders on this background. Add a subtle border or translucent fill on inputs to reinforce the contrast boundary.</div>
+  </div>
+
+  <div class="issue low">
+    <div class="issue-meta"><span class="issue-id">#19</span><span class="sev low">Low</span></div>
+    <h3 class="issue-title">URL and email input fields are different widths</h3>
+    <p class="issue-desc">The URL/reply input is significantly wider than the email input, producing an unbalanced form layout.</p>
+    <div class="tags"><span class="tag">Royal Decree</span><span class="tag">Layout</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Standardise widths using a shared flex basis or explicit sizing.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+  8 · FOOTER & GLOBAL NAVIGATION
+══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-header-left">
+      <span class="section-num">08</span>
+      <h2 class="section-title">Footer &amp; Global Navigation</h2>
+    </div>
+    <span class="section-count">6 issues</span>
+  </div>
+
+  <div class="ss-strip">
+    <figure data-src="Screenshot 2026-05-19 at 10.36.07 PM.png" data-caption="Footer (desktop) — broken nav links, unlinked social icons, 'Accessibility' text clipped in sub-footer">
+      <img src="Screenshot 2026-05-19 at 10.36.07 PM.png" alt="Footer annotated broken links"/>
+      <figcaption>Footer — annotated: broken links &amp; clipped text</figcaption>
+    </figure>
+    <figure data-src="Screenshot 2026-05-19 at 10.35.55 PM.png" data-caption="Footer (desktop) — clean reference view">
+      <img src="Screenshot 2026-05-19 at 10.35.55 PM.png" alt="Footer desktop clean"/>
+      <figcaption>Footer — clean reference</figcaption>
+    </figure>
+    <figure data-src="Screenshot 2026-05-19 at 10.13.56 PM.png" data-caption="Mobile — navigation panel breaks when opened from a scrolled position">
+      <img src="Screenshot 2026-05-19 at 10.13.56 PM.png" alt="Mobile nav broken when scrolled"/>
+      <figcaption>Mobile — nav broken when scrolled</figcaption>
+    </figure>
+    <figure data-src="Screenshot 2026-05-19 at 10.12.23 PM.png" data-caption="Mobile nav drawer — logo is clipped by the drawer container">
+      <img src="Screenshot 2026-05-19 at 10.12.23 PM.png" alt="Mobile nav drawer logo clipped"/>
+      <figcaption>Mobile nav drawer — logo clipped</figcaption>
+    </figure>
+    <figure data-src="Screenshot 2026-05-19 at 10.10.45 PM.png" data-caption="Mobile homepage — logo absent from nav bar on page load">
+      <img src="Screenshot 2026-05-19 at 10.10.45 PM.png" alt="Mobile homepage no logo"/>
+      <figcaption>Mobile homepage — logo missing from nav</figcaption>
+    </figure>
+  </div>
+
+  <div class="issue crit">
+    <div class="issue-meta"><span class="issue-id">#20</span><span class="sev crit">Critical</span></div>
+    <h3 class="issue-title">Footer site navigation links are broken or resolve to dead routes</h3>
+    <p class="issue-desc">Contests, Meet the Cast, Press and others go nowhere. "Watch on YouTube" scrolls to the page header rather than opening YouTube.</p>
+    <div class="tags"><span class="tag">Footer</span><span class="tag">Navigation</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Audit every footer href. The YouTube link should open the channel URL in a new tab. Stub or remove links without a destination page.</div>
+  </div>
+
+  <div class="issue crit">
+    <div class="issue-meta"><span class="issue-id">#21</span><span class="sev crit">Critical</span></div>
+    <h3 class="issue-title">Sub-footer legal links (Privacy, Terms, Accessibility) are non-functional; "Accessibility" is truncated</h3>
+    <p class="issue-desc">None of the legal utility links navigate anywhere. "Accessibility" is clipped by container overflow, appearing as "ACCESSIBILIT".</p>
+    <div class="tags"><span class="tag">Footer</span><span class="tag warn">Accessibility</span><span class="tag">Legal</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Wire all three hrefs to their destination pages. Fix the overflow — increase container width, reduce padding, or allow wrapping in the sub-footer.</div>
+  </div>
+
+  <div class="issue high">
+    <div class="issue-meta"><span class="issue-id">#22</span><span class="sev high">High</span></div>
+    <h3 class="issue-title">Social media icons in footer have no href — clicking does nothing</h3>
+    <p class="issue-desc">Instagram, TikTok, and YouTube icons are decorative with no links attached.</p>
+    <div class="tags"><span class="tag">Footer</span><span class="tag">Social Media</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Add the correct profile URLs, open in a new tab, and give each icon link a descriptive <code>aria-label</code>.</div>
+  </div>
+
+  <div class="issue crit">
+    <div class="issue-meta"><span class="issue-id">#23</span><span class="sev crit">Critical</span></div>
+    <h3 class="issue-title">Mobile navigation breaks when the hamburger menu is opened after scrolling</h3>
+    <p class="issue-desc">Opening the menu from a scrolled position causes the nav panel to break — layout is disrupted and links become unreachable.</p>
+    <div class="tags"><span class="tag warn">Mobile</span><span class="tag">Navigation</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Set the mobile menu to <code>position: fixed</code> and lock body scroll on open. Test on iOS Safari and Android Chrome at multiple scroll offsets.</div>
+  </div>
+
+  <div class="issue med">
+    <div class="issue-meta"><span class="issue-id">#24</span><span class="sev med">Medium</span></div>
+    <h3 class="issue-title">Logo is clipped inside the mobile nav drawer</h3>
+    <p class="issue-desc">When the mobile nav drawer is open, the logo in the top-left is partially cropped by the drawer container.</p>
+    <div class="tags"><span class="tag warn">Mobile</span><span class="tag">Branding</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Increase left padding or constrain the logo container so the full mark is visible. Verify at 375 px and 390 px viewport widths.</div>
+  </div>
+
+  <div class="issue high">
+    <div class="issue-meta"><span class="issue-id">#25</span><span class="sev high">High</span></div>
+    <h3 class="issue-title">Logo missing from the mobile nav bar on page load</h3>
+    <p class="issue-desc">The top-left logo slot in the mobile nav bar renders empty, removing brand presence at the most prominent moment of the page.</p>
+    <div class="tags"><span class="tag warn">Mobile</span><span class="tag">Branding</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Verify the logo image src is not gated behind a scroll-state flag or JS condition. Check for a <code>display: none</code> rule applied incorrectly at mobile breakpoints.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+  9 · BACKEND & DATA INTEGRITY
+══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-header-left">
+      <span class="section-num">09</span>
+      <h2 class="section-title">Backend &amp; Data Integrity</h2>
+    </div>
+    <span class="section-count">3 issues</span>
+  </div>
+
+  <div class="issue crit">
+    <div class="issue-meta"><span class="issue-id">#26</span><span class="sev crit">Critical</span></div>
+    <h3 class="issue-title">Forms may display a "success" state even when the database save failed</h3>
+    <p class="issue-desc">Contest and watch-party forms mark submission as complete after the request is sent, without verifying that the Supabase insert actually succeeded. Only honeypot bot blocks are checked. A silent DB error produces a false "done" state — the entry is lost with no error surfaced to the user.</p>
+    <div class="tags"><span class="tag">Forms</span><span class="tag">Data Integrity</span><span class="tag info">Supabase</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Await the Supabase insert response and inspect the returned error object before setting success state. If the insert fails, surface a user-facing error and retain form data so the user can retry. Log the error server-side.</div>
+  </div>
+
+  <div class="issue high">
+    <div class="issue-meta"><span class="issue-id">#27</span><span class="sev high">High</span></div>
+    <h3 class="issue-title">Spam / bot protection is incomplete — three gaps identified</h3>
+    <p class="issue-desc">Some protections are in place but the Royal Decree form is missing a honeypot, and no CAPTCHA or IP rate limiting is applied across any form.</p>
+    <table class="status-table">
+      <thead><tr><th style="width:65%">Protection measure</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>One vote per poll per browser (DB + localStorage)</td><td><span class="pill pill-done"><span class="pill-dot"></span>Done</span></td></tr>
+        <tr><td>Honeypot on contest &amp; watch-party forms</td><td><span class="pill pill-done"><span class="pill-dot"></span>Done</span></td></tr>
+        <tr><td>Honeypot on Royal Decree form</td><td><span class="pill pill-missing"><span class="pill-dot"></span>Missing</span></td></tr>
+        <tr><td>CAPTCHA (Turnstile or equivalent)</td><td><span class="pill pill-missing"><span class="pill-dot"></span>Missing</span></td></tr>
+        <tr><td>IP rate limiting (server-side or Cloudflare)</td><td><span class="pill pill-missing"><span class="pill-dot"></span>Missing</span></td></tr>
+      </tbody>
+    </table>
+    <div class="tags"><span class="tag">Forms</span><span class="tag warn">Security</span><span class="tag">Royal Decree</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>Add a honeypot field to the Royal Decree form immediately. Evaluate Cloudflare Turnstile (invisible CAPTCHA) on all submission forms before launch. Implement server-side rate limiting at the Supabase edge function layer or via Cloudflare rules.</div>
+  </div>
+
+  <div class="issue high">
+    <div class="issue-meta"><span class="issue-id">#28</span><span class="sev high">High</span></div>
+    <h3 class="issue-title">No transactional email system — copy promises inbox delivery that isn't implemented</h3>
+    <p class="issue-desc">UI copy (e.g. "Watch your inbox") implies users will receive confirmation or welcome emails. No transactional email integration exists — entries are stored in Supabase only. If collected emails are later exported to a sending service, providers may reject or flag the list because there is no confirmed opt-in trail.</p>
+    <div class="tags"><span class="tag">Email</span><span class="tag">Forms</span><span class="tag">Contests</span></div>
+    <div class="rec"><span class="rec-label">Recommendation</span>(1) Confirm with the team whether transactional email is handled outside the site. If users expect automatic confirmations, integrate a sending service (e.g. Resend, Postmark, Mailchimp Transactional) before launch. (2) Implement double opt-in or a clear consent checkbox at the point of email capture so the list is deliverable and legally defensible. (3) Remove or update any UI copy implying an email will be sent until the system is in place.</div>
+  </div>
+</div>
+
+
+<!-- ══ DOCUMENT FOOTER ════════════════════════════════════ -->
+<div class="doc-footer">
+  <div class="doc-footer-meta">
+    <p>Queen of the Castle — Website QA Review · May 19, 2026</p>
+    <p>28 issues · 8 Critical · 10 High · 7 Medium · 3 Low</p>
+  </div>
+  <div class="doc-footer-agency">
+    <a href="https://directroutedesign.com" target="_blank" rel="noopener" aria-label="Direct Route Design">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 38" height="22" aria-hidden="true">
+        <rect x="0" y="1" width="36" height="36" rx="4" fill="#222"/>
+        <rect x="6" y="7" width="10" height="24" rx="2" fill="#F15A22"/>
+        <polygon points="16,7 30,19 16,31" fill="#F15A22"/>
+        <rect x="9" y="11" width="5" height="16" rx="1" fill="#222"/>
+        <polygon points="14,11 21.5,19 14,27" fill="#222"/>
+        <text x="44" y="20" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif" font-size="15" font-weight="700" fill="#fff" dominant-baseline="middle">Direct Route.</text>
+        <text x="44" y="30" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif" font-size="7.5" font-weight="500" fill="rgba(255,255,255,0.45)" letter-spacing="1.5">MARKETING &amp; DESIGN</text>
+      </svg>
+    </a>
+    <div class="doc-footer-agency-right">
+      Prepared by Direct Route Design<br>
+      <a href="https://directroutedesign.com" target="_blank" rel="noopener">directroutedesign.com</a>
+    </div>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+
+<!-- ══ LIGHTBOX SCRIPT ════════════════════════════════════ -->
+<script>
+(function () {
+  var overlay  = document.getElementById('lb-overlay');
+  var img      = document.getElementById('lb-img');
+  var caption  = document.getElementById('lb-caption');
+  var closeBtn = document.getElementById('lb-close');
+
+  function open(src, cap) {
+    img.src = src;
+    img.alt = cap || '';
+    caption.innerHTML = cap || '';
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function close() {
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(function() { img.src = ''; }, 200);
+  }
+
+  document.querySelectorAll('.ss-strip figure[data-src]').forEach(function (fig) {
+    fig.addEventListener('click', function () { open(fig.dataset.src, fig.dataset.caption); });
+  });
+
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+  closeBtn.addEventListener('click', close);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) close();
+  });
+})();
+</script>
+
+</body>
+</html>
